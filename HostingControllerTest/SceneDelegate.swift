@@ -7,6 +7,7 @@
 
 import UIKit
 
+/// As a `Presenter`, the scene delegate can present a full screen UIViewController
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, Presenter {
 
     var window: UIWindow?
@@ -17,7 +18,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, Presenter {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
+        
+        //This is most of the magic here that we pass a `Presenter` to the SwiftUI hierarchy which it can use to present a full screen view controller in such a way that `preferredScreenEdgesDeferringSystemGestures` will still work
         var contentView = ContentView(presenter: self)
+        
+        //`HostingController` is a `UIHostingController` and it conforms to `Presenter` and therefor can present a full screen view controller.
+        //If THIS is the view controller that does the presenting then it is in the hiearchy of our root view controller and therefor can honor `preferredScreenEdgesDeferringSystemGestures`
+        //when we use a `UIViewControllerRepresentable` to present a full screen view controller, it provides it's *own* `UIHostingController` which implements its own `preferredScreenEdgesDeferringSystemGestures`
         let hostingController = HostingController(rootView: contentView)
         contentView.presenter = hostingController
         
@@ -28,7 +35,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, Presenter {
     }
 
     func presentViewController() {
-        (window?.rootViewController as! Presenter).presentViewController()
+        (window?.rootViewController as? Presenter)?.presentViewController()
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {
